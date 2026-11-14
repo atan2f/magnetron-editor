@@ -11,7 +11,7 @@
 </head>
 <body>
 <header class="top">
-  <div class="brand">MAGNETRON<small>editor</small></div>
+  <div class="brand">MAGNETRON</div>
   <div class="conn">
     <span class="dot" id="dot"></span>
     <span id="status">Not connected</span>
@@ -19,8 +19,8 @@
     <select class="sel" id="ch" aria-label="MIDI channel"></select>
   </div>
   <div class="actions">
-    <button class="btn" id="get" type="button">Get from device</button>
-    <button class="btn" id="send" type="button">Send to device</button>
+    <button class="btn glyph" id="get" type="button" title="Get from device" aria-label="Get from device"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M9 2v8M5.5 6.5 9 10l3.5-3.5"/><path d="M3 11v3h12v-3"/></svg></button>
+    <button class="btn glyph" id="send" type="button" title="Send to device" aria-label="Send to device"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M9 10V2M5.5 5.5 9 2l3.5 3.5"/><path d="M3 11v3h12v-3"/></svg></button>
   </div>
   <div class="sound">
     <span class="name"><input id="nm" maxlength="14" spellcheck="false" aria-label="Sound name"></span>
@@ -90,7 +90,7 @@
 
     <div id="settings" hidden>
       <div class="band">Settings (device)</div>
-      <section class="panel" style="--c:var(--glo)"><div class="ph"><span class="t">SETTINGS</span></div><div class="cells wide"></div></section>
+      <section class="panel" style="--c:var(--glo)"><div class="ph"><span class="t">SETTINGS</span><button class="btn small" id="reload-tables" type="button" title="Read the device's wavetables again">Reload tables</button></div><div class="cells wide"></div></section>
     </div>
 
     <div class="log"><span id="log-in"></span><span id="log-out"></span><span>Drag a value · Shift fine · double-click resets · ? turns the CC / NRPN tooltips on and off</span></div>

@@ -9,7 +9,7 @@ import * as values from "./values.js";
 import { PARAMS, paramOfField, STEP_FIELD } from "./params.js";
 import { CATEGORIES } from "./data/fields.js";
 import { soundFile, readSoundFile, download } from "./syxfile.js";
-import { onTable, forget as forgetTables } from "./tables.js";
+import { onTable, forget as forgetTables, load as loadTables } from "./tables.js";
 import { initSections } from "./ui/sections.js";
 import { initMatrix } from "./ui/matrix.js";
 import { initLayers } from "./ui/layers.js";
@@ -24,13 +24,15 @@ const $ = id => document.getElementById(id);
 
 // ---- status ----------------------------------------------------------------------------------------------------
 
-function status(text, state = "") {
+// text: short; detail, or the build when connected, on hover
+function status(text, state = "", detail = "") {
     $("status").textContent = text;
+    $("status").title = detail || (model.device.connected ? model.device.version : text);
     $("dot").className = `dot ${state}`;
 }
 
 async function attempt(what, fn) {
-    try { return await fn(); } catch (e) { status(e.message || `${what} failed.`, "err"); return undefined; }
+    try { return await fn(); } catch (e) { status(`${what} failed`, "err", e.message); return undefined; }
 }
 
 // ---- rendering: once a frame at most ----------------------------------------------------------------------------
@@ -117,25 +119,27 @@ let connecting = false;
 async function connect() {
     if (!midi.ready()) {
         model.setDevice({ connected: false });
-        status("No Magnetron found. Connect it by USB and pick its port.", "err");
+        status("Not found", "err", "No Magnetron found. Connect it by USB and pick its port.");
         return;
     }
     if (connecting || model.device.connected) return;
     connecting = true;
-    forgetTables();                               // (this build's tables, asked as they're shown)
+    forgetTables();                               // (another build can have other tables)
     status("Connecting…", "busy");
     try {
         const version = await sysex.getVersion();
         model.setDevice({ connected: true, version });
         model.setSettings(await sysex.getSettings(), "device");
-        status(`${version} · reading presets…`, "busy");
+        status("Reading presets…", "busy");
         model.setDevice({ names: await sysex.getNames() });
         const s = await sysex.getEditBuffer();
         model.loadSound(s.words, s.name, s.category, null);
-        status(`${version} · USB`, "on");
+        status("Reading tables…", "busy");
+        await loadTables(version);
+        status("Connected", "on");
     } catch (e) {
         model.setDevice({ connected: false });
-        status(e.message, "err");
+        status("Not connected", "err", e.message);
     } finally { connecting = false; }
 }
 
@@ -190,9 +194,14 @@ $("get").addEventListener("click", async () => {
         model.loadSound(s.words, s.name, s.category, null);
     });
 });
+$("reload-tables").addEventListener("click", () => attempt("Tables", async () => {
+    status("Reading tables…", "busy");
+    await loadTables(model.device.version, true);
+    status("Connected", "on");
+}));
 $("send").addEventListener("click", () => attempt("Send", async () => {
     await sysex.sendEditBuffer(model.sound.words, model.sound.name, model.sound.category);
-    status(`${model.device.version} · sent ${model.sound.name}`, "on");
+    status(`Sent ${model.sound.name}`, "on");
 }));
 $("store").addEventListener("click", async () => {
     const r = await storeDialog();
@@ -204,7 +213,7 @@ $("store").addEventListener("click", async () => {
         midi.programChange(r.slot);               // (the device on the stored preset, as the editor is)
         model.markSaved(r.slot);
         library.reveal();
-        status(`${model.device.version} · stored ${slotNumber(r.slot)} ${r.name}`, "on");
+        status(`Stored ${slotNumber(r.slot)} ${r.name}`, "on");
     });
 });
 
@@ -216,4 +225,4 @@ addEventListener("resize", schedule);
 document.fonts.ready.then(schedule);
 startTooltips($("help"));
 schedule();
-midi.start().then(() => { ports(); connect(); }, e => status(e.message, "err"));
+midi.start().then(() => { ports(); connect(); }, e => status("No MIDI", "err", e.message));

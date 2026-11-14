@@ -32,7 +32,7 @@ export function initSections() {
             ["S", "D", "K", "V"].map(x => cell(`O${k}${x}`)), [cell(`W${k}L`), cell(`W${k}E`)]));
         renders.push(() => {
             update();
-            const table = tableAt(values.indexAt(P[`W${k}T`], v(P[`W${k}T`])), model.device.connected);
+            const table = tableAt(values.indexAt(P[`W${k}T`], v(P[`W${k}T`])));
             drawWaterfall(s.canvas, table && table.halves, Math.trunc(v(P[`W${k}P`]) + 0.5) & 63);
             s.aside.textContent = table ? table.name : "";
         });
