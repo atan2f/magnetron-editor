@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magnetron Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="css/editor.css">
+<script type="module" src="js/main.js"></script>
+</head>
+<body>
+<header class="top">
+  <div class="brand">MAGNETRON<small>editor</small></div>
+  <div class="conn">
+    <span class="dot" id="dot"></span>
+    <span id="status">Not connected</span>
+    <select class="sel" id="port" aria-label="MIDI port"></select>
+    <select class="sel" id="ch" aria-label="MIDI channel"></select>
+  </div>
+  <div class="actions">
+    <button class="btn" id="get" type="button">Get from device</button>
+    <button class="btn" id="send" type="button">Send to device</button>
+  </div>
+  <div class="sound">
+    <span class="name"><input id="nm" maxlength="14" spellcheck="false" aria-label="Sound name"></span>
+    <select class="sel" id="cat" aria-label="Category"></select>
+    <span class="edited" id="edited" hidden>EDITED</span>
+    <button class="btn primary" id="store" type="button">Store…</button>
+    <button class="btn help" id="help" type="button" aria-pressed="true" title="Tooltips: each value's CC and NRPN">?</button>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="lib" aria-label="Presets">
+    <h2><span>PRESETS</span><span class="count" id="lib-count"></span></h2>
+    <div class="tabs"><button class="tab on" id="tab-factory" type="button">Factory</button><button class="tab" id="tab-user" type="button">User</button></div>
+    <input class="sel search" id="search" type="search" placeholder="Search name or number" aria-label="Search presets" spellcheck="false" autocomplete="off">
+    <select class="sel" id="filter" aria-label="Category filter"></select>
+    <div class="listwrap"><ul class="list" id="list" tabindex="0" aria-label="Presets"></ul><div class="track" id="track"><i id="thumb"></i></div></div>
+    <div class="actions">
+      <button class="btn" id="load" type="button">Load</button>
+      <button class="btn" id="del" type="button">Delete</button>
+      <button class="btn" id="imp" type="button">Import .syx</button>
+      <button class="btn" id="exp" type="button">Export .syx</button>
+      <input type="file" id="imp-file" accept=".syx,application/octet-stream" hidden>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="band">Layers</div>
+    <div class="layers"><div class="cards" id="layer-cards"></div><div class="cells patchcells" id="layer-cells"></div></div>
+
+    <div class="band" id="layer-band">Layer A</div>
+    <div class="grid">
+      <section class="panel s4" id="osc1" style="--c:var(--osc)"><div class="ph"><span class="lay">A</span><span class="t">OSC 1</span><span class="aside"></span></div><canvas class="vis tall"></canvas><div class="cells"></div></section>
+      <section class="panel s4" id="osc2" style="--c:var(--osc)"><div class="ph"><span class="lay">A</span><span class="t">OSC 2</span><span class="aside"></span></div><canvas class="vis tall"></canvas><div class="cells"></div></section>
+      <section class="panel s4" id="wenv" style="--c:var(--osc)"><div class="ph"><span class="lay">A</span><span class="t">WAVE ENV</span></div><canvas class="vis tall"></canvas><div class="cells"></div></section>
+
+      <section class="panel s4" id="filt" style="--c:var(--filt)"><div class="ph"><span class="lay">A</span><span class="t">FILTER</span><span class="aside"></span></div><canvas class="vis"></canvas><div class="cells"></div></section>
+      <section class="panel s4" id="fenv" style="--c:var(--filt)"><div class="ph"><span class="lay">A</span><span class="t">FILT ENV</span></div><canvas class="vis"></canvas><div class="cells"></div></section>
+      <section class="panel s4" id="aenv" style="--c:var(--env)"><div class="ph"><span class="lay">A</span><span class="t">AMP ENV</span></div><canvas class="vis"></canvas><div class="cells"></div></section>
+
+      <section class="panel s5" id="lfo" style="--c:var(--lfo1)"><div class="ph"><span class="lay">A</span><span class="t">LFO</span></div>
+        <div class="lane" style="--c:var(--lfo1)"><div class="name"></div><canvas class="vis lanevis"></canvas></div>
+        <div class="lane" style="--c:var(--lfo2)"><div class="name"></div><canvas class="vis lanevis"></canvas></div>
+        <div class="cells lfocells"></div></section>
+      <section class="panel s7" id="matrix" style="--c:var(--mat)"><div class="ph"><span class="lay">A</span><span class="t">MATRIX</span><span class="aside">8 slots</span></div><table class="mx"><tbody id="matrix-rows"></tbody></table></section>
+
+      <section class="panel s12" id="voice" style="--c:var(--voice)"><div class="ph"><span class="lay">A</span><span class="t">VOICE</span></div>
+        <div class="facts"><div class="fact"><span>Plays</span><b></b></div><div class="fact"><span>Bend</span><b></b></div><div class="fact"><span>Dirt</span><b></b></div><div class="fact"><span>Flavour</span><b></b></div></div>
+        <div class="cells wide"></div></section>
+    </div>
+
+    <div class="band">Effects (patch)</div>
+    <div class="grid">
+      <section class="panel s6" id="fx1" style="--c:var(--fx)"><div class="ph"><span class="t">FX 1</span><span class="pill" hidden>1/2 RATE</span><span class="aside"></span></div><canvas class="vis"></canvas><div class="cells"></div></section>
+      <section class="panel s6" id="fx2" style="--c:var(--fx)"><div class="ph"><span class="t">FX 2</span><span class="pill" hidden>1/2 RATE</span><span class="aside"></span></div><canvas class="vis"></canvas><div class="cells"></div></section>
+    </div>
+
+    <div class="band">Arp/sequencer/chords (patch)</div>
+    <div class="grid">
+      <section class="panel s4" id="arp" style="--c:var(--seq)"><div class="ph"><span class="t">ARP</span><button type="button" class="onoff" id="arp-on" aria-label="Arpeggiator on">OFF</button></div>
+        <canvas class="vis rhythm"></canvas><div class="note"></div><div class="cells"></div></section>
+      <section class="panel s8" id="seq" style="--c:var(--seq)"><div class="ph"><span class="t">SEQ</span><button type="button" class="onoff" id="seq-on" aria-label="Sequencer on">OFF</button><span class="aside"></span></div><div class="steps"></div><div class="cells wide"></div></section>
+      <section class="panel s12" id="chords" style="--c:var(--glo)"><div class="ph"><span class="t">CHORDS</span></div>
+        <div class="facts"><div class="fact"><span>Chords</span><b></b></div><div class="fact"><span>Plays</span><b></b></div><div class="fact keys"><span>Keys</span><b></b></div></div>
+        <div class="cells wide"></div></section>
+    </div>
+
+    <div id="settings" hidden>
+      <div class="band">Settings (device)</div>
+      <section class="panel" style="--c:var(--glo)"><div class="ph"><span class="t">SETTINGS</span></div><div class="cells wide"></div></section>
+    </div>
+
+    <div class="log"><span id="log-in"></span><span id="log-out"></span><span>Drag a value · Shift fine · double-click resets · ? turns the CC / NRPN tooltips on and off</span></div>
+  </main>
+</div>
+</body>
+</html>
