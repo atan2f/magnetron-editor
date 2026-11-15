@@ -31,7 +31,7 @@ export function initSettings(put) {
     // the device's SETTINGS pages (pages.c): MIDI (Omni, Recv Ch, Send Ch, MPE, Max Chan), then the device's (Clock
     // In / Out, Saver, Debug); and the preset it boots with (SAVE on SETTINGS there)
     const none = () => null;
-    const update = cellRow(el.querySelector(".cells"), [s("OMNI"), s("RCHN"), s("SCHN"), none, s("MPES"), s("MPEC"), none, none,
+    const update = cellRow(el.querySelector(".cells"), [s("OMNI"), s("RCHN"), s("SCHN"), s("PGIN"), s("PRIN"), s("PROU"), s("MPES"), s("MPEC"),
         s("CLKI"), s("CLKO"), s("SCRN"), s("DBUG"), boot(put)]);
     return () => {
         el.hidden = !Object.keys(model.settings).length;
