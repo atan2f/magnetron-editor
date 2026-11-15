@@ -70,13 +70,15 @@ export function initLibrary(actions) {
     });
     for (const [name, el] of Object.entries(tabs)) el.addEventListener("click", () => { tab = name; picks = new Set(); anchor = null; render(); });
     filter.addEventListener("change", render);
-    search.addEventListener("input", render);
+    const clear = document.getElementById("search-clear");   // the cross in the search: the search emptied
+    search.addEventListener("input", () => { clear.hidden = !search.value; render(); });
+    clear.addEventListener("click", () => { search.value = ""; clear.hidden = true; render(); search.focus(); });
     search.addEventListener("keydown", e => {             // Enter plays the first match; down goes into the list
         const first = list.firstElementChild;
         if (!first) return;
         if (e.key === "Enter" && entry(+first.dataset.slot)) { e.preventDefault(); choose(+first.dataset.slot); play(+first.dataset.slot); }
         else if (e.key === "ArrowDown") { e.preventDefault(); choose(+first.dataset.slot); list.focus(); }
-        else if (e.key === "Escape" && search.value) { e.preventDefault(); search.value = ""; render(); }
+        else if (e.key === "Escape" && search.value) { e.preventDefault(); search.value = ""; clear.hidden = true; render(); }
     });
 
     // ---- the arrangement's changes -----------------------------------------------------------------------------
