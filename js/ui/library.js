@@ -71,14 +71,21 @@ export function initLibrary(actions) {
     for (const [name, el] of Object.entries(tabs)) el.addEventListener("click", () => { tab = name; picks = new Set(); anchor = null; render(); });
     filter.addEventListener("change", render);
     const clear = document.getElementById("search-clear");   // the cross in the search: the search emptied
-    search.addEventListener("input", () => { clear.hidden = !search.value; render(); });
-    clear.addEventListener("click", () => { search.value = ""; clear.hidden = true; render(); search.focus(); });
+    // the search emptied: the whole list again, on the picked preset (else the sounding one)
+    const emptied = () => {
+        clear.hidden = true;
+        render();
+        const li = (anchor !== null && list.querySelector(`li[data-slot="${anchor}"]`)) || list.querySelector("li.cur");
+        if (li) list.scrollTop = li.offsetTop - list.offsetTop - list.clientHeight / 3;
+    };
+    search.addEventListener("input", () => { if (search.value) { clear.hidden = false; render(); } else emptied(); });
+    clear.addEventListener("click", () => { search.value = ""; emptied(); search.focus(); });
     search.addEventListener("keydown", e => {             // Enter plays the first match; down goes into the list
         const first = list.firstElementChild;
         if (!first) return;
         if (e.key === "Enter" && entry(+first.dataset.slot)) { e.preventDefault(); choose(+first.dataset.slot); play(+first.dataset.slot); }
         else if (e.key === "ArrowDown") { e.preventDefault(); choose(+first.dataset.slot); list.focus(); }
-        else if (e.key === "Escape" && search.value) { e.preventDefault(); search.value = ""; clear.hidden = true; render(); }
+        else if (e.key === "Escape" && search.value) { e.preventDefault(); search.value = ""; emptied(); }
     });
 
     // ---- the arrangement's changes -----------------------------------------------------------------------------
