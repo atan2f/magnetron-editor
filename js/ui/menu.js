@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// A list's names in a pop-up under its cell: click one, or arrows and Enter; Escape or a click outside closes it.
-let open = null;
+// A list's names in a pop-up under its cell: click one, or arrows and Enter; Escape, a click outside or a click
+// on its cell again closes it.
+let open = null, shut = null;                     // (shut: the cell whose press just closed its menu: its click opens none)
 
 export function closeMenu() {
     if (!open) return;
@@ -12,6 +13,7 @@ export function closeMenu() {
 }
 
 export function openMenu(owner, labels, current, choose) {
+    if (shut === owner) { shut = null; return; }
     closeMenu();
     const el = document.createElement("div");
     el.className = "menu";
@@ -38,7 +40,12 @@ export function openMenu(owner, labels, current, choose) {
     const below = r.bottom + 4 + m.height < innerHeight - 8;
     el.style.left = `${x}px`;
     el.style.top = `${below ? r.bottom + 4 : Math.max(8, r.top - 4 - m.height)}px`;
-    const outside = e => { if (!el.contains(e.target)) closeMenu(); };
+    const outside = e => {
+        if (el.contains(e.target)) return;
+        shut = owner.contains(e.target) ? owner : null;
+        if (shut) document.addEventListener("pointerup", () => setTimeout(() => { shut = null; }, 0), { once: true, capture: true });   // (only that press's own release)
+        closeMenu();
+    };
     document.addEventListener("pointerdown", outside, true);
     open = { el, owner, outside };
     (el.children[current] || el.firstChild).focus();

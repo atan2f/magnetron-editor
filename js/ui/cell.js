@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // A value cell, as the device's (a label, a big value, a thin bar), and the control behind it (also the matrix's
 // and the steps'): drag up / down to move it a step at a time (Shift: fine steps, where the field has them),
-// double-click for its default, arrow keys when focused; a list opens its names on a click (or Enter).
+// double-click for its default, arrow keys when focused. A list is a dropdown: a click (or Enter) opens its names,
+// a drag does nothing.
 import { openMenu } from "./menu.js";
 
 // pixels of drag a step: a short list moves slowly, 0..127 about 2.4 px a step
@@ -26,14 +27,14 @@ export function bindControl(el, binding, onClick) {
         e.preventDefault();
         el.focus();
         el.setPointerCapture(e.pointerId);
-        const y0 = e.clientY;
+        const y0 = e.clientY, list = !!b.labels && !onClick;
         let taken = 0, moved = false;
-        el.classList.add("drag");
+        if (!list) el.classList.add("drag");
         const onMove = m => {
             const per = pxPerStep(b) * (m.shiftKey && b.fine ? 1.2 : 1);
             const want = Math.trunc((y0 - m.clientY) / per);
             if (Math.abs(y0 - m.clientY) > 3) moved = true;
-            if (want !== taken) { move(want - taken, m.shiftKey); taken = want; }
+            if (want !== taken && !list) { move(want - taken, m.shiftKey); taken = want; }
         };
         const onUp = up => {
             el.classList.remove("drag");
