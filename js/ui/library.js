@@ -226,8 +226,11 @@ export function initLibrary(actions) {
 
     // ---- drawing ---------------------------------------------------------------------------------------------------
 
-    let shown = "";
+    let shown = "", listed = tab;
+    const scrolls = { factory: 0, user: 0 };                             // each tab's own place in its list
     function render() {
+        const turned = tab !== listed;
+        if (turned) scrolls[listed] = list.scrollTop;
         if (model.device.names !== names) { names = model.device.names; arr.reset(names); picks = new Set(); }   // (a new connection's)
         else if (!busy && !pending()) arr.reset(names);                  // (a store elsewhere)
         const users = arr.slots.filter(Boolean).length, changes = pending(), sel = picked();
@@ -247,6 +250,7 @@ export function initLibrary(actions) {
             shown = key;
             sync();
         }
+        if (turned) { listed = tab; list.scrollTop = scrolls[tab]; sync(); }
         const cur = model.sound.slot;
         for (const li of list.children) {             // (the rows' states put on the rows there are: a drag keeps its row)
             const s = +li.dataset.slot, e = entry(s);

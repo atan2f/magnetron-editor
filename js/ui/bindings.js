@@ -38,7 +38,7 @@ export function param(p, name) {
 }
 
 // a sequencer step's field (the one the panel edits, or step `at`): Pitch (0..96, C4 at 48), Velo (0..127),
-// Param 1 / 2 (-64..+63)
+// Param 1 / 2 (-64..+63: the matrix's sources Seq P1 / P2)
 const SE_NAMES = ["Pitch", "Velo", "Param 1", "Param 2"];
 const sevenbit = v => Math.max(0, Math.min(127, Math.trunc(Math.fround(Math.fround(v * 127) + 0.5))));
 export function step(k, at = null) {
@@ -52,7 +52,7 @@ export function step(k, at = null) {
         frac: v => (k === 0 ? Math.trunc(Math.trunc(v + 0.5) * 256 / 96) / 256 : Math.trunc(sevenbit(v) * 256 / 127) / 256),
         step: (v, d) => (k === 0 ? Math.max(0, Math.min(96, Math.trunc(v + 0.5) + d)) : Math.fround(Math.max(0, Math.min(127, sevenbit(v) + d)) / 127)),
         fine: null,
-        def: FIELDS[STEP_FIELD + k].def,
+        def: k < 2 ? FIELDS[STEP_FIELD + k].def : 0.5,   // (the params' centre: Init's, tools/gen_presets.py)
         labels: null,
         range: k === 0 ? 96 : 127,
         tip: () => `NRPN ${field()}`,

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // The Protein's own sounds (F0 3E 2F dev 10|13 ..: tag + float fields) as Magnetron's: tools/protein_syx.py's
-// reading and tools/gen_presets.py's convert, the same uniform rules as the factory presets' (envelope times to
+// reading and tools/gen_presets.py's migrate and convert, the same uniform rules as the factory presets' (an older
+// format's sound as the current one, envelope times to
 // Magnetron's positions, matrix routes to envelope times scaled by their stage's stretch), float for float.
 import { FIELDS, FIELD } from "./params.js";
 
@@ -22,6 +23,39 @@ function envelopePosition(v, tail) {
     return position >= 127 ? 1 : Math.fround(Math.fround(position + 0.25) / 127);
 }
 
+const VERSION = 8;                              // the sound format of the Protein 1.03b3
+const whole = v => Math.trunc(v + 0.05);        // the firmware's (int)((double)v + 0.05)
+
+// a filter type of an older format as the current list's (LP24 LP12 HP24 HP12 Drive Bypass)
+function migrateType(v, version) {
+    const n = whole(v);
+    if (version === 7) return n >= 0 && n <= 3 ? [0, 2, 4, 5][n] : v;   // 7's list: LP24 HP24 Drive Bypass
+    if (n < 2) return n ? 2 : 0;                                         // 4..6's list: LP24 HP24 Bypass Drive
+    return whole(v + 1) === 3 ? 5 : v + 1;
+}
+
+// a matrix source of format 4 or 5: two sources have since joined the list, at 12 and at 15
+function migrateSource(v) {
+    if (whole(v) < 12) return v;
+    return whole(v + 1) < 15 ? v + 1 : v + 2;
+}
+
+// A sound of an older format as the current one, as the Protein does when it loads one from its flash (1.03b3,
+// 0x420294f0): the filter type's list (formats 4..7), the matrix sources' (4, 5) and targets' (4); in place
+export function migrate(words, version) {
+    if (version >= VERSION) return words;
+    if (version < 4) throw new Error("A Protein sound in this file is in a format too old to read.");
+    for (const layer of "1234") {
+        words[FIELD["fty" + layer]] = migrateType(words[FIELD["fty" + layer]], version);
+        for (let route = 1; route <= 8; ++route) {
+            const md = FIELD[`md${route}${layer}`], ms = FIELD[`ms${route}${layer}`];
+            if (version === 4 && whole(words[md]) > 9) words[md] += 1;
+            if (version <= 5) words[ms] = migrateSource(words[ms]);
+        }
+    }
+    return words;
+}
+
 // words: a Float32Array of the 561 fields, the Protein's values; converted in place
 export function convert(words) {
     for (const layer of "1234") {
@@ -37,6 +71,8 @@ export function convert(words) {
             words[i] = (gain + 1) / 2;
         }
     }
+    // the steps' Param 1 / 2 at their centre: no modulation (the Protein's 0 feeds nothing there; here, the matrix: -1)
+    for (let step = 0; step < 32; ++step) for (const param of "ab") words[FIELD[`S${param}${String(step).padStart(2, "0")}`]] = 0.5;
     return words;
 }
 
@@ -55,7 +91,7 @@ export class ProteinReader {
         if (part === 1) {
             let name = "";
             for (let i = 0; i < 24 && m[at + 2 + i]; ++i) name += String.fromCharCode(m[at + 2 + i]);
-            this.sound = { name: name.trim(), category: m[at + 1] < CATEGORIES ? m[at + 1] : 0, words: Float32Array.from(FIELDS, f => f.def) };
+            this.sound = { name: name.trim(), category: m[at + 1] < CATEGORIES ? m[at + 1] : 0, version: m[at], words: Float32Array.from(FIELDS, f => f.def) };
             at += 26;
         } else if (!this.sound) return null;
         for (let k = at; k < m.length - 2 - 9; k += 10) {
@@ -65,7 +101,7 @@ export class ProteinReader {
         if (part !== total) return null;
         const done = this.sound;
         this.sound = null;
-        convert(done.words);
+        convert(migrate(done.words, done.version));
         return done;
     }
 }
