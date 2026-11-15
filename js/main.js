@@ -8,7 +8,8 @@ import * as sysex from "./sysex.js";
 import * as values from "./values.js";
 import { PARAMS, paramOfField, STEP_FIELD } from "./params.js";
 import { CATEGORIES } from "./data/fields.js";
-import { soundFile, readSoundFile, download } from "./syxfile.js";
+import { soundFile, soundsFile, readSounds, download } from "./syxfile.js";
+import * as transfer from "./transfer.js";
 import { onTable, forget as forgetTables, load as loadTables } from "./tables.js";
 import { initSections } from "./ui/sections.js";
 import { initMatrix } from "./ui/matrix.js";
@@ -42,7 +43,7 @@ const settingsPut = pairs => attempt("Settings", async () => {
     model.setSettings(pairs, "ui");
 });
 const renders = [initLayers(), initSections(), initMatrix(), initFx(), initPerform(), initSettings(settingsPut)];
-const library = initLibrary({ load, erase, importFile, exportFile });
+const library = initLibrary({ load, audition, importOne, readFiles, exportFile, exportSounds, backup, apply, ask, say: text => status(text, "err", text) });
 let queued = false;
 function schedule() {
     if (queued) return;
@@ -160,27 +161,61 @@ async function load(slot) {
     });
 }
 
-async function erase(slot) {
-    const e = model.device.names.get(slot);
-    if (!e || (await ask("Delete preset?", `Delete ${slotNumber(slot)} ${e.name}? This can't be undone.`, ["Cancel", "Delete"])) !== 1) return;
-    await attempt("Delete", async () => {
-        await sysex.deleteSlot(slot);
-        model.device.names.delete(slot);
-        if (model.sound.slot === slot) model.sound.slot = null;
-        model.setDevice({});
+// a sound the editor holds (a file's, staged for a user slot): heard through the edit buffer
+async function audition(e) {
+    if (!(await keepChanges("Load"))) return;
+    await attempt("Load", async () => {
+        model.loadSound(e.words, e.name, e.category, null);
+        model.sound.edited = true;
+        await sysex.sendEditBuffer(e.words, e.name, e.category);
+        schedule();
     });
 }
 
-async function importFile(file) {
-    if (!(await keepChanges("Import"))) return;
+// every sound of these files, in order (undefined: one couldn't be read)
+function readFiles(files) { return attempt("Import", async () => {
+    const out = [];
+    for (const f of files) out.push(...readSounds(new Uint8Array(await f.arrayBuffer())));
+    return out;
+}); }
+
+// Import of one file holding one sound with no slot of its own: into the editor, the device's edit buffer (true:
+// taken; the library places anything else in the user slots)
+async function importOne(file) {
+    const found = await readFiles([file]);
+    if (!found) return true;
+    if (found.length !== 1 || found[0].slot !== null) return false;
+    if (!(await keepChanges("Import"))) return true;
     await attempt("Import", async () => {
-        const s = readSoundFile(new Uint8Array(await file.arrayBuffer()));
+        const s = found[0];
         model.loadSound(s.words, s.name, s.category, null);
         model.sound.edited = true;
         if (model.device.connected) await sysex.sendEditBuffer(s.words, s.name, s.category);
         schedule();
     });
+    return true;
 }
+
+const progress = what => (k, n, verb = what) => status(`${verb} ${k + 1} / ${n}…`, "busy");
+
+// the picked presets as one file (read from the device where the editor doesn't hold them)
+function exportSounds(entries) { return attempt("Export", async () => {
+    const found = await transfer.sounds(entries, progress("Reading"));
+    download(soundsFile(found), `${found.length} Magnetron presets.syx`);
+    status("Connected", "on");
+}); }
+
+function backup() { return attempt("Backup", async () => {
+    const n = await transfer.backup(progress("Reading"));
+    status(`Backed up ${n} presets`, "on");
+}); }
+
+// the library's staged user slots written to the device
+function apply(arr) { return attempt("Apply", async () => {
+    const n = await transfer.apply(arr, progress(""));
+    model.setDevice({});
+    status(`Wrote ${n} slot${n === 1 ? "" : "s"}`, "on");
+}); }
 
 function exportFile() {
     const name = (model.sound.name || "Sound").replace(/[^\w\- ]+/g, "").trim() || "Sound";
@@ -204,6 +239,7 @@ $("send").addEventListener("click", () => attempt("Send", async () => {
     status(`Sent ${model.sound.name}`, "on");
 }));
 $("store").addEventListener("click", async () => {
+    if (library.pending()) { status("Apply or discard first", "err", "The user slots have changes that aren't sent yet. Apply or discard them, then store."); return; }
     const r = await storeDialog();
     if (!r) return;
     await attempt("Store", async () => {

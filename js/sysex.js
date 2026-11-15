@@ -8,7 +8,7 @@ import { sendSysex } from "./midi.js";
 export const ID = { SOUND: 0x10, GET: 0x11, GET_SLOT: 0x12, STORE: 0x13, DELETE: 0x14, NAMES: 0x20, NAMES_REPLY: 0x21,
     SETTINGS_GET: 0x30, SETTINGS: 0x31, TABLE: 0x50, TABLE_REPLY: 0x51, VERSION: 0x40, VERSION_REPLY: 0x41, RESPONSE: 0x0F };
 export const CODES = ["ok", "empty slot", "bad slot", "checksum", "out of order", "bad part", "bad request", "busy"];
-export const SLOTS = 320, USER = 256, USER_SLOTS = 64;
+export const SLOTS = 384, USER = 256, USER_SLOTS = 128;
 const MODEL = 0x4D, VERSION = 1, PER = 98, NAME = 24, TIMEOUT = 1000;
 
 export const put5 = w => [(w >>> 28) & 127, (w >>> 21) & 127, (w >>> 14) & 127, (w >>> 7) & 127, w & 127];

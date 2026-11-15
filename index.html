@@ -37,13 +37,18 @@
     <div class="tabs"><button class="tab on" id="tab-factory" type="button">Factory</button><button class="tab" id="tab-user" type="button">User</button></div>
     <input class="sel search" id="search" type="search" placeholder="Search name or number" aria-label="Search presets" spellcheck="false" autocomplete="off">
     <select class="sel" id="filter" aria-label="Category filter"></select>
-    <div class="listwrap"><ul class="list" id="list" tabindex="0" aria-label="Presets"></ul><div class="track" id="track"><i id="thumb"></i></div></div>
+    <div class="listwrap"><ul class="list" id="list" tabindex="0" aria-label="Presets"></ul><div class="track" id="track"><i id="thumb"></i></div><div class="ins" id="ins" hidden></div></div>
+    <div class="pend" id="pend" hidden><span id="pend-text"></span> <span class="lost" id="pend-lost"></span>
+      <div class="actions"><button class="btn go" id="apply" type="button">Apply</button><button class="btn" id="discard" type="button">Discard</button></div>
+    </div>
     <div class="actions">
       <button class="btn" id="load" type="button">Load</button>
       <button class="btn" id="del" type="button">Delete</button>
       <button class="btn" id="imp" type="button">Import .syx</button>
       <button class="btn" id="exp" type="button">Export .syx</button>
-      <input type="file" id="imp-file" accept=".syx,application/octet-stream" hidden>
+      <button class="btn wide" id="backup" type="button">Back up all user presets</button>
+      <input type="file" id="imp-file" accept=".syx,application/octet-stream" multiple hidden>
+      <div class="ghost" id="ghost" aria-hidden="true"></div>
     </div>
   </aside>
 

@@ -63,7 +63,7 @@ button { font: inherit; color: inherit }
 .listwrap { flex: 1 1 auto; min-height: 0; display: flex; gap: 2px; margin: 8px 0 }
 .list { list-style: none; margin: 0; padding: 0; overflow: auto; flex: 1 1 auto; min-width: 0; font-variant-numeric: tabular-nums; scrollbar-width: none }
 .list::-webkit-scrollbar { display: none }
-.list li { display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; padding: 5px 6px; border-radius: 3px; cursor: pointer; font-size: 13px }
+.list li { display: grid; grid-template-columns: 36px 1fr auto; gap: 8px; padding: 5px 6px; border-radius: 3px; cursor: pointer; font-size: 13px }
 .list li .n, .list li .c { color: var(--dim) }
 .list li .c { font-size: 11px; align-self: center }
 .list li:hover { background: rgba(150,170,205,.07) }
@@ -71,6 +71,21 @@ button { font: inherit; color: inherit }
 .list li.cur { font-weight: 500 }
 .list li.cur .n { color: var(--browse) }
 .list li.empty .nm { color: var(--dim) }
+/* several picked; a slot whose preset isn't the device's yet; rows being dragged; where a drop goes in */
+.list li[draggable] { -webkit-user-drag: element }
+.list li.moved { box-shadow: inset 2px 0 0 var(--live) }
+.list li.moved .n { color: var(--live) }
+.list li.lift { opacity: .35 }
+.list li.onto { outline: 2px solid var(--browse); outline-offset: -2px }
+.listwrap { position: relative }
+.ins { position: absolute; left: 2px; right: 18px; height: 0; border-top: 2px solid var(--browse); pointer-events: none }
+.ghost { position: fixed; left: -400px; top: 0; background: var(--bg2); border: 1px solid var(--browse); border-radius: 4px; padding: 6px 10px; font-size: 12px; white-space: nowrap }
+.pend { border: 1px solid var(--live); border-radius: 4px; padding: 8px; margin-bottom: 8px; font-size: 12px; color: var(--line) }
+.pend #pend-text { color: var(--text); font-weight: 500 }
+.pend .lost { color: var(--red); font-weight: 500; cursor: help; text-decoration: underline dotted }
+.lib .pend .actions { margin-top: 8px; border-top: 0; padding-top: 0 }
+.btn.go { background: var(--live); color: var(--bg); border-color: var(--live); font-weight: 500 }
+.lib .actions .btn.wide { flex-basis: 100% }
 .track { position: relative; width: 14px; flex: none }
 .track::before { content: ""; position: absolute; top: 0; bottom: 0; left: 5px; width: 4px; border-radius: 2px; background: rgba(150,170,205,.08) }
 .track i { position: absolute; left: 0; right: 0 }
@@ -176,7 +191,7 @@ canvas.rhythm { height: 46px; margin-top: 6px }
 .tip { position: fixed; z-index: 20; pointer-events: none; background: var(--bg2); border: 1px solid rgba(150,170,205,.35);
   border-radius: 4px; padding: 5px 8px; font-size: 12px; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.4) }
 .tip b { font-weight: 500; color: var(--c, var(--text)); margin-right: 8px }
-.tip span { color: var(--line); font-variant-numeric: tabular-nums }
+.tip span { color: var(--line); font-variant-numeric: tabular-nums; white-space: pre }
 .dialog-back { position: fixed; inset: 0; z-index: 40; background: rgba(5,10,24,.6); display: grid; place-items: center; padding: 16px }
 .dialog { background: var(--panel); border: 1px solid rgba(150,170,205,.3); border-radius: 8px; padding: 18px; width: min(440px, 100%); display: grid; gap: 14px }
 .dialog h2 { margin: 0; font-size: 15px; font-weight: 500 }
