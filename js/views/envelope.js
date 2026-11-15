@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // An envelope as the device draws it (app/ui/envview.c, after nonagon's EnvelopeVisualizer): the shape spans the
 // box, each stage as wide as its share of the total time (sustain a fixed 200 ms) on a square-root axis; the
-// engine's times (env_times.h) and exponential curves; an infinite decay holds the peak, an infinite release
-// its level.
+// engine's times (env_times.h) and exponential curves.
 import { ENV_ATTACK_MS, ENV_TAIL_MS } from "../data/fields.js";
 import { setup, polyline, fillUnder, rect, text, mix, C, panelBg } from "./canvas.js";
 
@@ -13,9 +12,8 @@ const approach = (t, k) => (1 - Math.exp(-k * t)) / (1 - Math.exp(-k));
 export function drawEnvelope(canvas, accent, a, d, s, r) {
     const { g, w: cw, h: ch } = setup(canvas);
     const x0 = 6, x1 = cw - 6, y0 = 2, y1 = ch - LABEL_H;
-    const dinf = rate(d) >= 127, rinf = rate(r) >= 127;
     const am = Math.sqrt(ENV_ATTACK_MS[rate(a)]), dm = Math.sqrt(ENV_TAIL_MS[rate(d)]), rm = Math.sqrt(ENV_TAIL_MS[rate(r)]);
-    const sm = Math.sqrt(SUSTAIN_MS), held = dinf ? 1 : s, total = am + dm + sm + rm;
+    const sm = Math.sqrt(SUSTAIN_MS), held = s, total = am + dm + sm + rm;
     const ends = [am / total, (am + dm) / total, (am + dm + sm) / total];
     const [attackEnd, decayEnd, sustainEnd] = ends;
     const W = x1 - x0, base = y1 - 1, H = base - y0, columns = Math.min(Math.trunc(W), 256);
@@ -24,9 +22,9 @@ export function drawEnvelope(canvas, accent, a, d, s, r) {
         const x = i / columns;
         let level;
         if (x <= attackEnd) level = approach(attackEnd > 0 ? x / attackEnd : 1, 4.85);
-        else if (x <= decayEnd) level = dinf ? 1 : 1 + (s - 1) * approach((x - attackEnd) / (decayEnd - attackEnd), 4.6);
+        else if (x <= decayEnd) level = 1 + (s - 1) * approach((x - attackEnd) / (decayEnd - attackEnd), 4.6);
         else if (x <= sustainEnd) level = held;
-        else level = rinf ? held : held * (1 - approach((x - sustainEnd) / (1 - sustainEnd), 4.6));
+        else level = held * (1 - approach((x - sustainEnd) / (1 - sustainEnd), 4.6));
         xs.push(x0 + W * x); ys.push(base - H * level);
     }
     fillUnder(g, xs, ys, y1, mix(panelBg, accent, 72));

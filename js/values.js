@@ -2,7 +2,6 @@
 // How each parameter reads and how a step moves it (app/ui/values.c): a label, an integer, 0..127, -64..+63 for
 // the centred ones, a time for an envelope stage, BPM, Hz, ms.
 import { PARAMS, FL, P } from "./params.js";
-import { ENV_ATTACK_MS, ENV_TAIL_MS } from "./data/fields.js";
 import { CLOCK_RATIOS } from "./data/engine.js";
 import * as units from "./units.js";
 import * as fxunits from "./fxunits.js";
@@ -13,8 +12,7 @@ const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 export function indexAt(p, v) { return clamp(Math.trunc(f(v + 0.5)), 0, PARAMS[p].steps - 1); }
 export function bpmAt(v) { return clamp(Math.trunc(f(f(v * 380) + 20.5)), 20, 400); }   // raw * 380 + 20
 export function sevenbitAt(p, v) {
-    // an envelope time as the engine indexes its rate, (int)(v * 127); others rounded
-    return clamp(Math.trunc(f(f(v * 127) + ((PARAMS[p].flags & FL.ENV_TIME) ? 0 : 0.5))), 0, 127);
+    return clamp(Math.trunc(f(f(v * 127) + 0.5)), 0, 127);
 }
 
 // an LFO rate in Hz as the engine runs it: rate * 127 * 64 the 16-bit phase step, every 196 samples
@@ -34,11 +32,6 @@ export function format(p, v) {
     if (unit !== null) return unit;
     if (d.steps && d.labels) return d.labels[indexAt(p, v)];
     if (d.steps) return String(indexAt(p, v));
-    if (d.flags & FL.ENV_TIME) {
-        const i = sevenbitAt(p, v);
-        if ((d.flags & FL.ENV_INF) && i === 127) return "∞";
-        return units.time((d.flags & FL.ENV_INF) ? ENV_TAIL_MS[i] : ENV_ATTACK_MS[i]);
-    }
     if (d.flags & FL.TEMPO) return String(bpmAt(v));
     if (d.flags & FL.LFO_SPEED) { const r = clamp(v, 0, 1); return units.hz(rateHz(f(r * r))); }
     if (d.flags & FL.DELAY_TIME) return units.time(Math.trunc(f(delayMs(v) + 0.5)));
@@ -65,10 +58,6 @@ export function frac(p, v) {                      // the bar: 0..1 (the device's
 export function stepped(p, from, detents) {
     const d = PARAMS[p];
     if (d.steps) return clamp(indexAt(p, from) + detents, 0, d.steps - 1);
-    if (d.flags & FL.ENV_TIME) {
-        const i = clamp(sevenbitAt(p, from) + detents, 0, 127);
-        return i === 127 ? 1 : f((i + 0.25) / 127);       // (+0.25: the engine's truncation lands on i)
-    }
     if (d.flags & FL.TEMPO) return f((clamp(bpmAt(from) + detents, 20, 400) - 20) / 380);
     // from between two 127ths: the first detent goes to the next one that way
     const x = f(clamp(from, 0, 1) * 127);
@@ -81,7 +70,7 @@ export function stepped(p, from, detents) {
 // in fine steps, a tenth of a step's each: the continuous fields alone; the delay's free time by what it shows
 export function fine(p, from, detents) {
     const d = PARAMS[p];
-    if (d.steps || (d.flags & (FL.ENV_TIME | FL.TEMPO))) return stepped(p, from, detents);
+    if (d.steps || (d.flags & FL.TEMPO)) return stepped(p, from, detents);
     if (d.flags & FL.DELAY_TIME) {
         let ms = Math.trunc(f(delayMs(from) + 0.5));
         if (ms >= 1000) ms = Math.trunc((ms + 5) / 10) * 10;

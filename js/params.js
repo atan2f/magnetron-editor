@@ -4,7 +4,7 @@
 import { PARAMS, FIELDS, FLAGS, LAYER_PARAMS, LAYER_STRIDE, CCMAP } from "./data/fields.js";
 
 export { PARAMS, FIELDS, LAYER_PARAMS, LAYER_STRIDE };
-export const FL = FLAGS;                       // BIPOLAR, ENV_TIME, ENV_INF, FX, LFO_SPEED, DELAY_TIME, ...
+export const FL = FLAGS;                       // BIPOLAR, FX, LFO_SPEED, DELAY_TIME, ...
 export const P = Object.fromEntries(PARAMS.map((p, i) => [p.key, i]));
 export const FIELD = Object.fromEntries(FIELDS.map((f, i) => [f.tag, i]));
 export const STEP_FIELD = FIELD.Sp00;          // the sequencer's step 1: Pitch, Velo, Param 1, Param 2; then step 2 ..
