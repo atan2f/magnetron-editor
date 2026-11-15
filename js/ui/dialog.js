@@ -4,6 +4,7 @@ import * as model from "../model.js";
 import { CATEGORIES } from "../data/fields.js";
 import { USER, USER_SLOTS } from "../sysex.js";
 import { slotNumber } from "./library.js";
+import { makeDropdown } from "./dropdown.js";
 
 const NAME = 14;                                // (a user preset's name on the device: 14 characters)
 
@@ -39,11 +40,11 @@ export function storeDialog() {
         const back = shell("Store to a user slot");
         const body = back.querySelector(".body");
         body.innerHTML = `<label class="row">Name <input id="st-name" maxlength="${NAME}" spellcheck="false"></label>
-            <label class="row">Category <select id="st-cat" class="sel"></select></label>
+            <div class="row">Category <button id="st-cat" class="sel drop" type="button" aria-label="Category"></button></div>
             <ul class="slots" id="st-slots" role="listbox" aria-label="User slot"></ul>`;
         const name = body.querySelector("#st-name"), cat = body.querySelector("#st-cat"), slots = body.querySelector("#st-slots");
         name.value = model.sound.name.slice(0, NAME);
-        cat.innerHTML = CATEGORIES.map((c, i) => `<option value="${i}">${c}</option>`).join("");
+        makeDropdown(cat, CATEGORIES.map((c, i) => [i, c]));
         cat.value = String(model.sound.category);
         let slot = model.sound.slot !== null && model.sound.slot >= USER ? model.sound.slot
             : USER + (Array.from({ length: USER_SLOTS }, (_, i) => i).find(i => !model.device.names.has(USER + i)) ?? 0);

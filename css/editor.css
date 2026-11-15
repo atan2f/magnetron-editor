@@ -28,6 +28,12 @@ button { font: inherit; color: inherit }
 .dot.busy { background: var(--seq) }
 .dot.err { background: var(--red) }
 .sel { background: var(--bg2); color: var(--text); border: 1px solid var(--rule); border-radius: 4px; padding: 5px 8px; font: inherit; font-size: 12px }
+/* a dropdown's button: as wide as its longest choice (.w: each choice, for its width alone) */
+.drop { display: inline-grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; align-items: baseline; text-align: left; cursor: pointer; min-width: 0; max-width: 100% }
+.drop .t { grid-area: 1 / 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.drop .w { grid-column: 1; height: 0; overflow: hidden; visibility: hidden; white-space: nowrap }
+.drop::after { content: "\25BE"; grid-area: 1 / 2; font-size: 11px; color: var(--dim) }
+#port { max-width: 220px }                     /* (a long port name is cut short there; whole in its menu) */
 .sound { display: flex; align-items: baseline; gap: 10px; margin-left: auto; flex-wrap: wrap }
 .sound .name input { all: unset; width: 9.5em; font-size: 22px; font-weight: 500; border-bottom: 1px dashed var(--dim) }
 .edited { color: var(--seq); font-size: 11px; letter-spacing: .08em }
@@ -184,9 +190,9 @@ canvas.rhythm { height: 46px; margin-top: 6px }
 @media (max-width: 760px) { .steps { grid-template-columns: repeat(8, minmax(0, 1fr)) } }
 
 /* pop-ups */
-.menu { position: fixed; z-index: 30; display: grid; gap: 2px; padding: 6px; background: var(--bg2); border: 1px solid rgba(150,170,205,.35);
-  border-radius: 5px; box-shadow: 0 6px 20px rgba(0,0,0,.45); max-height: 60vh; overflow: auto; min-width: 120px }
-.menu button { background: none; border: 0; text-align: left; padding: 4px 10px; border-radius: 3px; font-size: 12.5px; cursor: pointer; white-space: nowrap }
+.menu { position: fixed; z-index: 50; display: grid; gap: 2px; padding: 6px; background: var(--bg2); border: 1px solid rgba(150,170,205,.35);
+  border-radius: 5px; box-shadow: 0 6px 20px rgba(0,0,0,.45); max-height: 60vh; max-width: calc(100vw - 16px); overflow: auto; min-width: 120px }
+.menu button { background: none; border: 0; text-align: left; padding: 4px 10px; border-radius: 3px; font-size: 12.5px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .menu button:hover, .menu button:focus-visible { background: rgba(150,170,205,.12); outline: none }
 .menu button.on { color: var(--bg); background: var(--line) }
 .tip { position: fixed; z-index: 20; pointer-events: none; background: var(--bg2); border: 1px solid rgba(150,170,205,.35);

@@ -10,6 +10,7 @@ import { USER, USER_SLOTS, isUser } from "../sysex.js";
 import { Arrangement, entryOf } from "../arrange.js";
 import { NAME } from "../transfer.js";
 import { attachScrollbar } from "./scrollbar.js";
+import { makeDropdown } from "./dropdown.js";
 
 export const slotNumber = s => (s >= USER ? `U${String(s - USER + 1).padStart(3, "0")}` : String(s).padStart(3, "0"));
 
@@ -22,7 +23,7 @@ export function initLibrary(actions) {
     let tab = "factory", picks = new Set(), anchor = null, names = null, busy = false, drag = null;
     const sync = attachScrollbar(list, document.getElementById("track"), document.getElementById("thumb"));
 
-    filter.innerHTML = `<option value="">All categories</option>` + CATEGORIES.map((c, i) => `<option value="${i}">${c}</option>`).join("");
+    makeDropdown(filter, [["", "All categories"], ...CATEGORIES.map((c, i) => [i, c])]);
     // a slot's preset as the list shows it: a factory preset as the device names it, a user slot's as arranged
     const entry = s => (s >= USER ? arr.slots[s - USER] : model.device.names.has(s) ? entryOf(model.device.names.get(s), s) : null) || null;
     const pending = () => arr.changes(model.device.names).length;

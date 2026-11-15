@@ -12,13 +12,13 @@ export function closeMenu() {
     owner.focus();
 }
 
-export function openMenu(owner, labels, current, choose) {
+// columns: how many the names are laid in (default: by their count)
+export function openMenu(owner, labels, current, choose, columns = labels.length > 24 ? 3 : labels.length > 10 ? 2 : 1) {
     if (shut === owner) { shut = null; return; }
     closeMenu();
     const el = document.createElement("div");
     el.className = "menu";
     el.setAttribute("role", "listbox");
-    const columns = labels.length > 24 ? 3 : labels.length > 10 ? 2 : 1;
     el.style.gridTemplateColumns = `repeat(${columns}, minmax(0, 1fr))`;
     labels.forEach((l, i) => {
         const o = document.createElement("button");

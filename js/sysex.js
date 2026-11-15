@@ -5,7 +5,7 @@
 import { FIELDS, FIELD } from "./params.js";
 import { sendSysex } from "./midi.js";
 
-export const ID = { SOUND: 0x10, GET: 0x11, GET_SLOT: 0x12, STORE: 0x13, DELETE: 0x14, NAMES: 0x20, NAMES_REPLY: 0x21,
+export const ID = { SOUND: 0x10, GET: 0x11, GET_SLOT: 0x12, STORE: 0x13, DELETE: 0x14, CURRENT: 0x15, CURRENT_REPLY: 0x16, NAMES: 0x20, NAMES_REPLY: 0x21,
     SETTINGS_GET: 0x30, SETTINGS: 0x31, TABLE: 0x50, TABLE_REPLY: 0x51, VERSION: 0x40, VERSION_REPLY: 0x41, RESPONSE: 0x0F };
 export const CODES = ["ok", "empty slot", "bad slot", "checksum", "out of order", "bad part", "bad request", "busy"];
 export const SLOTS = 384, USER = 256, USER_SLOTS = 128;
@@ -157,6 +157,16 @@ export const getSlot = slot => request([message(ID.GET_SLOT, [slot >> 7, slot & 
 export const sendEditBuffer = (words, name, category) => request(dumpMessages(words, name, category), paced);
 export const storeSlot = (slot, words, name, category) => request(dumpMessages(words, name, category, slot), paced);
 export const deleteSlot = slot => request([message(ID.DELETE, [slot >> 7, slot & 127])], () => m => (m[3] === ID.RESPONSE ? true : undefined));
+
+// the preset the edit buffer's sound is: {slot (null: no stored preset), edited (changed since, on the device)}
+export function getCurrent() {
+    return request([message(ID.CURRENT, [])], () => (m, c) => {
+        if (m[3] !== ID.CURRENT_REPLY) return undefined;
+        const slot = (m[5] << 7) | m[6];
+        c.value = { slot: slot === 0x3FFF ? null : slot, edited: m[7] === 1 };
+        return true;
+    });
+}
 
 export function getNames(start = 0, count = SLOTS) {
     return request([message(ID.NAMES, [start >> 7, start & 127, count >> 7, count & 127])], () => (m, c) => {

@@ -20,6 +20,7 @@ import { initSettings } from "./ui/settings.js";
 import { initLibrary, slotNumber } from "./ui/library.js";
 import { startTooltips } from "./ui/tooltip.js";
 import { ask, storeDialog } from "./ui/dialog.js";
+import { makeDropdown } from "./ui/dropdown.js";
 
 const $ = id => document.getElementById(id);
 
@@ -51,8 +52,9 @@ function schedule() {
     requestAnimationFrame(() => { queued = false; renders.forEach(r => r()); top(); library.render(); });
 }
 
-$("cat").innerHTML = CATEGORIES.map((c, i) => `<option value="${i}">${c}</option>`).join("");
-$("ch").innerHTML = Array.from({ length: 16 }, (_, i) => `<option value="${i}">Ch ${i + 1}</option>`).join("");
+makeDropdown($("cat"), CATEGORIES.map((c, i) => [i, c]));
+makeDropdown($("ch"), Array.from({ length: 16 }, (_, i) => [i, `Ch ${i + 1}`]));
+makeDropdown($("port"), [], { columns: 1 });
 function top() {
     if (document.activeElement !== $("nm")) $("nm").value = model.sound.name;
     $("cat").value = String(model.sound.category);
@@ -108,13 +110,26 @@ sysex.onUnsolicited(m => {                        // a setting turned on the pan
 
 function ports() {
     const p = midi.ports(), sel = $("port");
-    sel.replaceChildren(...(p.outputs.length ? p.outputs : ["No MIDI ports"]).map(n => new Option(n, n)));
+    sel.setOptions((p.outputs.length ? p.outputs : ["No MIDI ports"]).map(n => [n, n]));
     if (p.output) sel.value = p.output;
 }
 $("port").addEventListener("change", () => {
     const name = $("port").value, p = midi.ports();
     midi.usePorts(p.inputs.find(n => n === name) || p.inputs.find(n => n.startsWith(name.slice(0, 8))) || null, name);
 });
+
+// the edit buffer's sound read, with the preset the device says it is (an older build tells none: asked once a
+// connection) shown in the library
+let tellsCurrent = true;
+async function readEditBuffer() {
+    const s = await sysex.getEditBuffer();
+    let cur = null;
+    if (tellsCurrent) try { cur = await sysex.getCurrent(); } catch { tellsCurrent = false; }
+    model.loadSound(s.words, s.name, s.category, cur && cur.slot !== null && model.device.names.has(cur.slot) ? cur.slot : null);
+    if (cur && cur.edited) model.sound.edited = true;
+    library.render();
+    library.reveal();
+}
 
 let connecting = false;
 async function connect() {
@@ -133,8 +148,8 @@ async function connect() {
         model.setSettings(await sysex.getSettings(), "device");
         status("Reading presets…", "busy");
         model.setDevice({ names: await sysex.getNames() });
-        const s = await sysex.getEditBuffer();
-        model.loadSound(s.words, s.name, s.category, null);
+        tellsCurrent = true;
+        await readEditBuffer();
         status("Reading tables…", "busy");
         await loadTables(version);
         status("Connected", "on");
@@ -224,10 +239,7 @@ function exportFile() {
 
 $("get").addEventListener("click", async () => {
     if (!(await keepChanges("Get"))) return;
-    await attempt("Get", async () => {
-        const s = await sysex.getEditBuffer();
-        model.loadSound(s.words, s.name, s.category, null);
-    });
+    await attempt("Get", readEditBuffer);
 });
 $("reload-tables").addEventListener("click", () => attempt("Tables", async () => {
     status("Reading tables…", "busy");

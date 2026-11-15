@@ -15,8 +15,8 @@
   <div class="conn">
     <span class="dot" id="dot"></span>
     <span id="status">Not connected</span>
-    <select class="sel" id="port" aria-label="MIDI port"></select>
-    <select class="sel" id="ch" aria-label="MIDI channel"></select>
+    <button class="sel drop" id="port" type="button" aria-label="MIDI port"></button>
+    <button class="sel drop" id="ch" type="button" aria-label="MIDI channel"></button>
   </div>
   <div class="actions">
     <button class="btn glyph" id="get" type="button" title="Get from device" aria-label="Get from device"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M9 2v8M5.5 6.5 9 10l3.5-3.5"/><path d="M3 11v3h12v-3"/></svg></button>
@@ -24,7 +24,7 @@
   </div>
   <div class="sound">
     <span class="name"><input id="nm" maxlength="14" spellcheck="false" aria-label="Sound name"></span>
-    <select class="sel" id="cat" aria-label="Category"></select>
+    <button class="sel drop" id="cat" type="button" aria-label="Category"></button>
     <span class="edited" id="edited" hidden>EDITED</span>
     <button class="btn primary" id="store" type="button">Store…</button>
     <button class="btn help" id="help" type="button" aria-pressed="true" title="Tooltips: each value's CC and NRPN">?</button>
@@ -36,7 +36,7 @@
     <h2><span>PRESETS</span><span class="count" id="lib-count"></span></h2>
     <div class="tabs"><button class="tab on" id="tab-factory" type="button">Factory</button><button class="tab" id="tab-user" type="button">User</button></div>
     <input class="sel search" id="search" type="search" placeholder="Search name or number" aria-label="Search presets" spellcheck="false" autocomplete="off">
-    <select class="sel" id="filter" aria-label="Category filter"></select>
+    <button class="sel drop" id="filter" type="button" aria-label="Category filter"></button>
     <div class="listwrap"><ul class="list" id="list" tabindex="0" aria-label="Presets"></ul><div class="track" id="track"><i id="thumb"></i></div><div class="ins" id="ins" hidden></div></div>
     <div class="pend" id="pend" hidden><span id="pend-text"></span> <span class="lost" id="pend-lost"></span>
       <div class="actions"><button class="btn go" id="apply" type="button">Apply</button><button class="btn" id="discard" type="button">Discard</button></div>
